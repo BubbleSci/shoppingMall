@@ -1,0 +1,164 @@
+<style lang="less">
+.index_swiper{
+  swiper{
+    width: 750rpx;
+    height: 340rpx;
+    image{
+      width: 100%;
+    }
+  }
+}
+.index_cate{
+  display: flex;
+  navigator{
+    padding: 20rpx;
+    flex:1;
+    image{
+      width:100%;
+    }
+  }
+}
+.index_floor{
+  .floor_group{
+    .floor_title{
+      image{
+        width:100%;
+      }
+    }
+    .floor_list{
+      //清楚浮动
+      overflow: hidden;
+      navigator{
+        float: left;
+        width:33.33%;
+      &:nth-last-child(-n+4){
+        height: 33.33vw * 386 / 232 / 2;
+      }
+      &:nth-child(2),
+      &:nth-child(3){
+        border-bottom:1px solid #fff;
+      }
+        image{
+          width: 100%;
+          height: 100%;
+        }
+      }
+    }
+  }
+}
+</style>
+
+
+<template>
+  <view class="pyg_index">
+    <!-- 搜索框 -->
+    <SearchInput></SearchInput>
+    <!-- 轮播图 -->
+    <view class="index_swiper">
+      <swiper autoplay indicator-dots="{{true}}" circular>
+        <swiper-item wx:for="{{swiperList}}" wx:key="goods_id">
+          <navigator url="{{item.navigator_url}}">
+            <image mode="widthFix" src="{{item.image_src}}"></image>
+          </navigator>
+        </swiper-item>
+      </swiper>
+    </view>
+    <!-- 导航 -->
+    <view class="index_cate">
+      <navigator
+        wx:for="{{catesList}}"
+        wx:key="name"
+        url="./category"
+        open-type="switchTab"
+      >
+        <image mode="widthFix" src="{{item.image_src}}"> </image>
+      </navigator>
+    </view>
+    <!-- 楼层 -->
+    <view class="index_floor">
+      <view
+        class="floor_group"
+        wx:for="{{floorList}}"
+        wx:for-item="item1"
+        wx:for-index="index1"
+        wx:key="floor_title"
+      >
+        <!-- 标题 -->
+        <view class="floor_title">
+          <image mode="widthFix" src="{{item1.floor_title.image_src}}"></image>
+        </view>
+        <!-- 内容 -->
+        <view class="floor_list">
+          <navigator
+            wx:for="{{item1.product_list}}"
+            wx:for-item="item2"
+            wx:for-index="index2"
+            wx:key="name"
+          >
+            <image
+              mode="{{index2===0?'widthFix':'scaleToFill'}}"
+              src="{{item2.image_src}}"
+            ></image>
+          </navigator>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from '@wepy/core';
+import { request } from '../request/index.js';
+
+wepy.page({
+  data: {
+    //轮播图
+    swiperList: [],
+    //导航数组
+    catesList: [],
+    //楼层数据
+    floorList: []
+  },
+  //options(Object)
+  //页面开始加载 就会触发
+  onLoad: function(options) {
+    //1 发送异步请求获取轮播图数据
+    // wx.request({
+    //       url: 'https://api-hmugo-web.itheima.net/api/public/v1/home/swiperdata',
+    //        success: (result) => {
+    //          this.swiperList= result.data.message
+    //        },
+
+    //    });
+    this.getSwiperList();
+    this.getCatesList();
+    this.getFloorList();
+  },
+  methods: {
+    getSwiperList() {
+      request({ url: '/home/swiperdata' }).then(result => {
+        this.swiperList = result;
+      });
+    },
+    getCatesList() {
+      request({ url: '/home/catitems' }).then(result => {
+        this.catesList = result;
+      });
+    },
+    getFloorList() {
+      request({ url: '/home/floordata' }).then(result => {
+        this.floorList = result;
+      });
+    }
+  }
+});
+</script>
+
+<config>
+{
+    "usingComponents": {
+      "SearchInput": "../components/SearchInput"
+    },
+    "navigationBarTitleText": "买你所想"
+}
+</config>

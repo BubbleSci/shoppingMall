@@ -1,0 +1,97 @@
+<style lang = "less">
+page {
+  background-color: #dedede;
+  padding: 20rpx;
+}
+.search_row {
+  height: 60rpx;
+  display: flex;
+}
+.search_row input {
+  background-color: #fff;
+  flex: 1;
+  height: 100%;
+  padding-left: 20rpx;
+}
+.search_row button {
+  width: 110rpx;
+  padding: 0;
+  height: 100%;
+  font-size: 28rpx;
+  margin: 0 10rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.search_content{
+  margin-top: 30rpx;
+}
+.search_content .search_item{ 
+    background-color: #fff;
+    font-size: 26rpx;
+    display: flex;
+    align-items: center;
+    padding: 15rpx 10rpx;
+    border-bottom: 1rpx solid #ccc;
+
+    overflow: hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+}
+</style>
+
+<template>
+ <view class="search_row">
+  <input placeholder="请输入关键字" bindinput="handleInput"/>
+  <button>搜索</button>
+</view>
+<view class="search_content">
+  <navigator
+   class="search_item"
+    wx:for="{{goods}}"
+   wx:key="goods_id"
+  >{{item.goods_name}}
+  </navigator>
+</view>
+</template>
+
+<script>
+import wepy from '@wepy/core';
+import { request } from '../request/index.js';
+
+wepy.page({
+  data: {
+    goods: []
+  },
+  TimeId: -1,
+  methods: {
+    handleInput(e) {
+      //console.log(e)
+      const { value } = e.$wx.detail;
+      if (!value.trim) {
+        return;
+      }
+      clearTimeout(this.TimeId);
+      this.TimeId = setTimeout(() => {
+        this.qsearch(value);
+      }, 1000);
+    },
+
+    async qsearch(query) {
+      const res = await request({
+        url: '/goods/qsearch',
+        data: { query }
+      });
+      console.log(res);
+      this.goods = res;
+    }
+  }
+});
+</script>
+
+<config>
+{
+  "usingComponents": {},
+    "navigationBarTitleText": "搜索中心"
+}
+</config>

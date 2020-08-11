@@ -1,0 +1,167 @@
+<style lang = "less">
+page {
+  height: 100%;
+}
+.cates {
+  height: 100%;
+}
+.cates .cate_contaainer {
+  display: flex;
+  height: calc( 100vh - 90rpx );
+}
+.cates .cate_contaainer .left_menu {
+  flex: 2;
+}
+.cates .cate_contaainer .left_menu .menu_item {
+  display: flex;
+  height: 80rpx;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+}
+.cates .cate_contaainer .left_menu .active {
+  border-left: solid 5rpx  currentColor;
+  color: var(--themeColor);
+}
+.cates .cate_contaainer .right_content {
+  flex: 5;
+}
+.cates .cate_contaainer .right_content .goods_group .goods_title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80rpx;
+}
+.cates .cate_contaainer .right_content .goods_group .goods_title .delimiter {
+  color: #ccc;
+  padding: 0 10rpx;
+}
+.cates .cate_contaainer .right_content .goods_group .goods_list {
+  display: flex;
+  flex-wrap: wrap;
+}
+.cates .cate_contaainer .right_content .goods_group .goods_list navigator {
+  text-align: center;
+  width: 33.33%;
+}
+.cates .cate_contaainer .right_content .goods_group .goods_list navigator image {
+  width: 50%;
+}
+
+</style>
+
+<template>
+  <view class="cates">
+    <SearchInput></SearchInput>
+    <view class="cate_contaainer">
+      <!-- 左侧菜单 -->
+      <scroll-view scroll-y class="left_menu">
+        <view
+          class="menu_item {{index===currentIndex?'active':''}}"
+          wx:for="{{leftMenuList}}"
+          wx:key="*this"
+          bindtap="handleItemTap"
+          data-index="{{index}}"
+        >
+          {{ item }}
+        </view>
+      </scroll-view>
+      <!-- 右侧商品 -->
+      <scroll-view scroll-y scroll-top="{{scrollTop}}" class="right_content">
+        <view
+          class="goods_group"
+          wx:for="{{rightContent}}"
+          wx:for-item="item1"
+          wx:for-index="index1"
+        >
+          <view class="goods_title">
+            <text class="delimiter">/</text>
+            <text class="title">{{ item1.cat_name }}</text>
+            <text class="delimiter">/</text>
+          </view>
+          <view class="goods_list">
+            <navigator
+              wx:for="{{item1.children}}"
+              wx:for-item="item2"
+              wx:for-index="index2"
+              wx:key="cat_id"
+              url="./goods_list?cid={{item2.cat_id}}"
+            >
+              <image mode="widthFix" src="{{item2.cat_icon}}"></image>
+              <view>{{ item2.cat_name }}</view>
+            </navigator>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from '@wepy/core';
+import { request } from '../request/index.js';
+
+wepy.page({
+  data: {
+    //左侧菜单数据
+    leftMenuList: [],
+    //右侧商品数据
+    rightContent: [],
+    //被点击左侧的菜单
+    currentIndex: 0,
+    //右侧内容滚动条距离顶部的距离
+    scrollTop: 0
+  },
+  // 接口返回数据
+  Cates: [],
+
+  onLoad: function(options) {
+    const Cates = wx.getStorageSync('cates');
+//判断本地存储中有没有旧的数据 增加缓存
+    if (!Cates) {
+      this.getCates();
+    } else {
+      if (Date.now() - Cates.time > 1000 * 10) {
+        this.getCates();
+      } else {
+        this.Cates = Cates.data;
+        this.leftMenuList = this.Cates.map(v => v.cat_name);
+        this.rightContent = this.Cates[0].children;
+      }
+    }
+  },
+  methods: {
+    async getCates() {
+      const res = await request({ url: '/categories' });
+      this.Cates = res;
+      wx.setStorageSync('cates', {
+        time: Date.now(),
+        data: this.Cates
+      });
+
+      this.leftMenuList = this.Cates.map(v => v.cat_name);
+      this.rightContent = this.Cates[0].children;
+      // this.leftMenuList = index1;
+      // this.rightContent;
+    },
+
+    handleItemTap(e) {
+      console.log(e);
+      const { index } = e.currentTarget.dataset;
+      this.rightContent = this.Cates[index].children;
+      (this.currentIndex = index), 
+      this.rightContent,
+       (this.scrollTop = 0);
+    }
+  }
+});
+</script>
+
+<config>
+{
+  "usingComponents": {
+    "SearchInput": "../components/SearchInput"
+  },
+  "navigationBarTitleText": "商品分类"
+}
+</config>
